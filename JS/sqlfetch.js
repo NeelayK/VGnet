@@ -172,6 +172,7 @@ async function fetchTeam() {
         const response = await fetch("https://vgnet.onrender.com/team");
 
 
+      
         if (!response.ok) {
             throw new Error("Failed to fetch team data");
         }
@@ -179,14 +180,14 @@ async function fetchTeam() {
         const data = await response.json();
 
         const categories = {
-            1: { element: document.getElementById("bsms"), members: [] },
-            2: { element: document.getElementById("pphd"), members: [] },
-            3: { element: document.getElementById("cphd"), members: [] },
-            4: { element: document.getElementById("ps"), members: [] }
+            1: document.getElementById("bsms"),
+            2: document.getElementById("pphd"),
+            3: document.getElementById("cphd"),
+            4: document.getElementById("ps")
         };
 
         Object.values(categories).forEach(category => {
-            if (category.element) category.element.innerHTML = "";
+            if (category) category.innerHTML = "";
         });
 
         data.forEach((team) => {
@@ -196,40 +197,28 @@ async function fetchTeam() {
                 return;
             }
 
-            categories[groupId].members.push(team);
-        });
+            const teamMember = document.createElement("div");
+            teamMember.classList.add("team-member");
 
-        Object.values(categories).forEach(category => {
-            if (category.members.length > 0) {
-                const header = document.createElement("h3");
-                header.textContent = getCategoryHeaderText(category.element.id);
-                category.element.appendChild(header);
+            const img = document.createElement("img");
+            img.src = team.image_link || "default-image.jpg"; 
+            img.alt = team.name;
 
-                category.members.forEach((team) => {
-                    const teamMember = document.createElement("div");
-                    teamMember.classList.add("team-member");
+            const teamText = document.createElement("div");
+            teamText.classList.add("team-text");
 
-                    const img = document.createElement("img");
-                    img.src = team.image_link || "default-image.jpg"; 
-                    img.alt = team.name;
+            const name = document.createElement("h2");
+            name.textContent = team.name;
 
-                    const teamText = document.createElement("div");
-                    teamText.classList.add("team-text");
+            const interest = document.createElement("p");
+            interest.textContent = team.research_interest;
 
-                    const name = document.createElement("h2");
-                    name.textContent = team.name;
+            teamText.appendChild(name);
+            teamText.appendChild(interest);
+            teamMember.appendChild(img);
+            teamMember.appendChild(teamText);
 
-                    const interest = document.createElement("p");
-                    interest.textContent = team.research_interest;
-
-                    teamText.appendChild(name);
-                    teamText.appendChild(interest);
-                    teamMember.appendChild(img);
-                    teamMember.appendChild(teamText);
-
-                    category.element.appendChild(teamMember);
-                });
-            }
+            categories[groupId].appendChild(teamMember);
         });
 
     } catch (error) {
@@ -237,13 +226,4 @@ async function fetchTeam() {
     }
 }
 
-function getCategoryHeaderText(categoryId) {
-    switch (categoryId) {
-        case "bsms": return "BSMS Students";
-        case "pphd": return "PhD Students (P)";
-        case "cphd": return "PhD Students (C)";
-        case "ps": return "Post Docs";
-        default: return "Unknown Category";
-    }
-}
 
