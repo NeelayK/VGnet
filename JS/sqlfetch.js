@@ -2,7 +2,7 @@
 async function fetchPublications() {
     try {
         //const response = await fetch("http://127.0.0.1:5000/publications");
-        const response = await fetch("https://vgnetv3.onrender.com/publications");
+        const response = await fetch("https://vgnet.onrender.com/publications");
         
         const data = await response.json();
 
@@ -44,7 +44,7 @@ async function fetchPublications() {
 
 async function fetchProjects() {
     try {
-        const response = await fetch("https://vgnetv3.onrender.com/projects");
+        const response = await fetch("https://vgnet.onrender.com/projects");
 
         //const response = await fetch("http://127.0.0.1:5000/projects");
 
@@ -92,7 +92,7 @@ async function fetchProjects() {
 async function fetchCollab() {
     try {
         
-        const response = await fetch("https://vgnetv3.onrender.com/collabs");
+        const response = await fetch("https://vgnet.onrender.com/collabs");
         //const response = await fetch("http://127.0.0.1:5000/collabs");
 
 
@@ -169,7 +169,7 @@ async function fetchCollab() {
 async function fetchTeam() {
     try {
         //const response = await fetch("http://127.0.0.1:5000/team");
-        const response = await fetch("https://vgnetv3.onrender.com/team");
+        const response = await fetch("https://vgnet.onrender.com/team");
 
         if (!response.ok) {
             throw new Error("Failed to fetch team data");
