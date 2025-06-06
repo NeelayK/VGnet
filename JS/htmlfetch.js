@@ -42,6 +42,7 @@ function loadPage(page) {
 
             if (document.querySelector(".team-category")) {
                 fetchTeam();
+                fetchGallery()
             }
             
             

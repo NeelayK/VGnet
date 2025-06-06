@@ -50,3 +50,12 @@ def get_team():
         print(f"Error fetching data: {e}")
         return jsonify({"error": "Internal Server Error"}), 500
 
+@app.route('/gallery', methods=['GET'])
+def get_gallery():
+    try:
+        response = supabase.table('gallery').select('*').execute()
+        return jsonify(response.data)
+    except Exception as e:
+        print(f"Error fetching data: {e}")
+        return jsonify({"error": "Internal Server Error"}), 500
+    

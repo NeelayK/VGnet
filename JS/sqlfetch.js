@@ -42,44 +42,76 @@ async function fetchPublications() {
     }
 }
 
+
 async function fetchProjects() {
     try {
         const response = await fetch("https://vgnet.onrender.com/projects");
 
-        //const response = await fetch("http://127.0.0.1:5000/projects");
+        if (!response.ok) {
+            throw new Error("Failed to fetch project data");
+        }
 
         const data = await response.json();
 
-        if (!response.ok) {
-            throw new Error(data.error || "Failed to fetch data");
-        }
+        const ongoingContainer = document.querySelector("#ongoing .info-container.projects");
+        const completedContainer = document.querySelector("#completed .info-container.projects");
 
-        const infoSection = document.querySelector('.info-section');
-        const Canvas = document.createElement('canvas');
-        Canvas.id = 'missionCanvas';
-        infoSection.appendChild(Canvas);
-
-        const infoContainer = document.querySelector('.projects');
-        infoContainer.innerHTML = '';
+        ongoingContainer.innerHTML = '';
+        completedContainer.innerHTML = '';
 
         data.forEach((project) => {
-            const infoBox = document.createElement('div');
-            infoBox.classList.add('info-box');
+            const infoBox = document.createElement("div");
+            infoBox.classList.add("info-box");
 
-            const title = document.createElement('h3');
+            // ───── Info Header ─────
+            const header = document.createElement("div");
+            header.classList.add("info-header");
+
+            const title = document.createElement("h3");
             title.textContent = project.title;
 
-            const desc = document.createElement('p');
+            const sponsorLogo = document.createElement("img");
+            sponsorLogo.src = project.sponsor_img;
+            sponsorLogo.alt = "Sponsor Logo";
+            sponsorLogo.classList.add("sponsor-logo");
+
+            header.appendChild(title);
+            header.appendChild(sponsorLogo);
+
+            // ───── Info Body ─────
+            const body = document.createElement("div");
+            body.classList.add("info-body");
+
+            const desc = document.createElement("p");
             desc.textContent = project.desc;
 
-            infoBox.appendChild(title);
-            infoBox.appendChild(desc);
-            infoContainer.appendChild(infoBox);
+            const prototypeImg = document.createElement("img");
+            prototypeImg.src = project.image_link || "/Assets/default-prototype.png";
+            prototypeImg.alt = "Prototype Image";
+            prototypeImg.classList.add("prototype-image");
+
+            body.appendChild(desc);
+            body.appendChild(prototypeImg);
+
+            // ───── Sponsor Footer ─────
+            const sponsor = document.createElement("h4");
+            sponsor.textContent = `Funding Agency: ${project.sponsor}`;
+
+            // ───── Compose & Append ─────
+            infoBox.appendChild(header);
+            infoBox.appendChild(body);
+            infoBox.appendChild(sponsor);
+
+            // Append based on boolean 'completed'
+            if (project.completed === true) {
+                completedContainer.appendChild(infoBox);
+            } else {
+                ongoingContainer.appendChild(infoBox);
+            }
         });
-        
-        canvasLoad(60,120, 1.3);
+
     } catch (error) {
-        console.error('Error:', error);
+        console.error("Error fetching projects:", error);
     }
 }
 
@@ -181,7 +213,7 @@ async function fetchTeam() {
 
         const categories = {
             1: document.getElementById("bsms"),
-            2: document.getElementById("pphd"),
+            2: document.getElementById("alumni"),
             3: document.getElementById("cphd"),
             4: document.getElementById("ps")
         };
@@ -227,3 +259,44 @@ async function fetchTeam() {
 }
 
 
+
+
+
+
+
+
+
+async function fetchGallery() {
+    try {
+        //const response = await fetch("http://127.0.0.1:5000/gallery");
+        const response = await fetch("https://vgnet.onrender.com/gallery");
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || "Failed to fetch gallery data");
+        }
+
+    const galleryContainer = document.querySelector('.gallery');
+
+
+        galleryContainer.innerHTML = ''; // Clear existing static content
+
+        data.forEach((item) => {
+            const img = document.createElement('img');
+            img.src = item.img_link;
+            img.style.marginBottom = "1em";
+
+            const caption = document.createElement('h1');
+            caption.textContent = item.desc;
+            caption.style.fontSize = "1.2rem";
+            caption.style.fontWeight = "normal";
+
+            galleryContainer.appendChild(img);
+            galleryContainer.appendChild(caption);
+        });
+
+    } catch (error) {
+        console.error('Error loading gallery:', error);
+    }
+}
