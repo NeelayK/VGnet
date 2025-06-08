@@ -1,6 +1,5 @@
-
-    function canvasLoad(numParticlesParameter=80, maxDistanceParameter =100, particleVelocityParamter=1.2) {
-    const canvas = document.getElementById("missionCanvas");
+export function canvasLoad(numParticlesParameter=80, maxDistanceParameter =100, particleVelocityParamter=1.2, canvasName = "missionCanvas", RGBA = "150,150,150") {
+    const canvas = document.getElementById(canvasName);
     const ctx = canvas.getContext("2d");
 
     canvas.width = canvas.offsetWidth;
@@ -57,7 +56,7 @@
                     ctx.beginPath();
                     ctx.moveTo(particles[i].x, particles[i].y);
                     ctx.lineTo(particles[j].x, particles[j].y);
-                    ctx.strokeStyle = `rgba(150, 150, 150, ${1 - distance / maxDistance})`;
+                    ctx.strokeStyle = `rgba(${RGBA} , ${1 - distance / maxDistance})`;
                     ctx.lineWidth = 1;
                     ctx.stroke();
                 }

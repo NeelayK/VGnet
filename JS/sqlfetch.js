@@ -1,57 +1,140 @@
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+import { canvasLoad } from './script.js';
 
-async function fetchPublications() {
-    try {
-        //const response = await fetch("http://127.0.0.1:5000/publications");
-        const response = await fetch("https://vgnet.onrender.com/publications");
-        
-        const data = await response.json();
+const supabaseUrl = "https://prfkhjuujnheztwhwmcd.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InByZmtoanV1am5oZXp0d2h3bWNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE4MDk2NjIsImV4cCI6MjA1NzM4NTY2Mn0.j92nEtB5mUORV5VlCpLsTbJNinSykjnpaX0R1cnZQXc";
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-        if (!response.ok) {
-            throw new Error(data.error || "Failed to fetch data");
-        }
-        const infoSection = document.querySelector('.info-section');
-        const Canvas = document.createElement('canvas');
-        Canvas.id = 'missionCanvas';
-        infoSection.appendChild(Canvas);
 
-        const infoContainer = document.querySelector('.publications');
-        infoContainer.innerHTML = '';
-        
-        data.forEach((publication) => {
-            const infoBox = document.createElement('div');
-            infoBox.classList.add('info-box');
 
-            const authors = document.createElement('h4');
-            authors.textContent = publication.authors;
+let publicationsData = {
+  1: [], // Journal Papers
+  2: [], // Conference Papers
+  3: [], // Patents
+};
 
-            const title = document.createElement('h2');
-            title.textContent = publication.paperName;
+const pageSize = 10;
+const currentPage = {
+  1: 0,
+  2: 0,
+  3: 0,
+};
 
-            const date = document.createElement('p');
-            date.textContent = publication.date;
 
-            infoBox.appendChild(authors);
-            infoBox.appendChild(title);
-            infoBox.appendChild(date);
-            infoContainer.appendChild(infoBox);
-        });
-        
-        canvasLoad(200,100, 1.1);
-    } catch (error) {
-        console.error('Error:', error);
-    }
+function getSectionMap() {
+  return {
+    1: document.querySelector('#JP .info-container'),
+    2: document.querySelector('#CP .info-container'),
+    3: document.querySelector('#PP .info-container'),
+  };
 }
 
 
-async function fetchProjects() {
+export function renderPage(type) {
+  const sectionMap = getSectionMap();
+  const container = sectionMap[type];
+
+  if (!container) {
+    console.error(`Container for type ${type} not found`);
+    return;
+  }
+
+  container.innerHTML = '';
+
+  // Sort by date descending (newest first)
+  const sortedData = publicationsData[type].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  // Calculate start and end indices
+  const start = currentPage[type] * pageSize;
+  const end = start + pageSize;
+  const pageData = sortedData.slice(start, end);
+
+  pageData.forEach(publication => {
+    const infoBox = document.createElement('div');
+    infoBox.classList.add('info-box');
+
+    const title = document.createElement('h4');
+    title.textContent = publication.title;
+
+    const authors = document.createElement('p');
+    authors.textContent = `Authors: ${publication.authors}`;
+
+    const dateObj = new Date(publication.date);
+    const formattedDate = dateObj.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+
+    const date = document.createElement('h4');
+    date.textContent = `${formattedDate}`;
+
+    infoBox.appendChild(title);
+    infoBox.appendChild(authors);
+    infoBox.appendChild(date);
+
+    container.appendChild(infoBox);
+  });
+}
+
+export async function fetchPublications() {
+  try {
+    const { data, error } = await supabase.from("publication").select("*");
+    if (error) throw error;
+
+    publicationsData = { 1: [], 2: [], 3: [] };
+    data.forEach(pub => {
+      if (publicationsData[pub.type]) {
+        publicationsData[pub.type].push(pub);
+      }
+    });
+
+    currentPage[1] = 0;
+    currentPage[2] = 0;
+    currentPage[3] = 0;
+
+    [1, 2, 3].forEach(type => renderPage(type));
+
+
+  } catch (error) {
+    console.error("Error loading publications:", error);
+  }
+
+}
+
+export function setupPaginationButtons() {
+  const nextButtons = document.querySelectorAll('.next-btn');
+  const prevButtons = document.querySelectorAll('.prev-btn');
+
+  nextButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const type = Number(btn.dataset.type);
+      const maxPage = Math.floor(publicationsData[type].length / pageSize);
+      if (currentPage[type] < maxPage) {
+        currentPage[type]++;
+        renderPage(type);
+      }
+    });
+  });
+
+  prevButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const type = Number(btn.dataset.type);
+      if (currentPage[type] > 0) {
+        currentPage[type]--;
+        renderPage(type);
+      }
+    });
+  });
+}
+
+
+
+
+
+
+export async function fetchProjects() {
     try {
-        const response = await fetch("https://vgnet.onrender.com/projects");
-
-        if (!response.ok) {
-            throw new Error("Failed to fetch project data");
-        }
-
-        const data = await response.json();
+        const { data, error } = await supabase.from("projects").select("*");
+        if (error) throw error;
+        const ongoingC = document.querySelector("#ongoing");
+        const completedC = document.querySelector("#completed");
 
         const ongoingContainer = document.querySelector("#ongoing .info-container.projects");
         const completedContainer = document.querySelector("#completed .info-container.projects");
@@ -59,11 +142,18 @@ async function fetchProjects() {
         ongoingContainer.innerHTML = '';
         completedContainer.innerHTML = '';
 
+        const ongoingCanvas = document.createElement('canvas');
+        ongoingCanvas.id = 'missionCanvasOngoing';
+        ongoingC.appendChild(ongoingCanvas);
+
+        const completedCanvas = document.createElement('canvas');
+        completedCanvas.id = 'missionCanvasCompleted';
+        completedC.appendChild(completedCanvas);
+
         data.forEach((project) => {
             const infoBox = document.createElement("div");
             infoBox.classList.add("info-box");
 
-            // ───── Info Header ─────
             const header = document.createElement("div");
             header.classList.add("info-header");
 
@@ -78,7 +168,6 @@ async function fetchProjects() {
             header.appendChild(title);
             header.appendChild(sponsorLogo);
 
-            // ───── Info Body ─────
             const body = document.createElement("div");
             body.classList.add("info-body");
 
@@ -93,22 +182,22 @@ async function fetchProjects() {
             body.appendChild(desc);
             body.appendChild(prototypeImg);
 
-            // ───── Sponsor Footer ─────
             const sponsor = document.createElement("h4");
             sponsor.textContent = `Funding Agency: ${project.sponsor}`;
 
-            // ───── Compose & Append ─────
             infoBox.appendChild(header);
             infoBox.appendChild(body);
             infoBox.appendChild(sponsor);
 
-            // Append based on boolean 'completed'
             if (project.completed === true) {
                 completedContainer.appendChild(infoBox);
             } else {
                 ongoingContainer.appendChild(infoBox);
             }
         });
+
+        canvasLoad(100, 200, 1.1, 'missionCanvasOngoing','155,155,255');
+        canvasLoad(100, 100, 1.1, 'missionCanvasCompleted','255,155,155');
 
     } catch (error) {
         console.error("Error fetching projects:", error);
@@ -121,20 +210,10 @@ async function fetchProjects() {
 
 
 
-async function fetchCollab() {
+export async function fetchCollab() {
     try {
         
-        const response = await fetch("https://vgnet.onrender.com/collabs");
-        //const response = await fetch("http://127.0.0.1:5000/collabs");
-
-
-        const data = await response.json();
-        console.log("Projects data:", data);
-
-        if (!response.ok) {
-            throw new Error(data.error || "Failed to fetch data");
-        }
-
+        const { data, error } = await supabase.from("collabs").select("*");
         const headContainer = document.querySelector('.collabsHead');
         headContainer.innerHTML = '';
 
@@ -147,7 +226,6 @@ async function fetchCollab() {
         const sections = {};
 
         Object.values(categories).forEach(({ title, id }) => {
-            // Create heading
             const h2 = document.createElement('h2');
             h2.style.textDecoration = "underline";
             h2.textContent = title;
@@ -196,20 +274,10 @@ async function fetchCollab() {
 
 
 
-
-
-async function fetchTeam() {
+export async function fetchTeam() {
     try {
-        //const response = await fetch("http://127.0.0.1:5000/team");
-        const response = await fetch("https://vgnet.onrender.com/team");
-
-
-      
-        if (!response.ok) {
-            throw new Error("Failed to fetch team data");
-        }
-
-        const data = await response.json();
+        const { data, error } = await supabase.from("team").select("*");
+        if (error) throw error;
 
         const categories = {
             1: document.getElementById("bsms"),
@@ -222,18 +290,24 @@ async function fetchTeam() {
             if (category) category.innerHTML = "";
         });
 
+        const hasMembers = { 1: false, 2: false, 3: false, 4: false };
+
         data.forEach((team) => {
             const groupId = parseInt(team.group, 10);
-            if (!categories[groupId]) {
+            const container = categories[groupId];
+
+            if (!container) {
                 console.warn(`Unknown team group: ${groupId}`);
                 return;
             }
+
+            hasMembers[groupId] = true;
 
             const teamMember = document.createElement("div");
             teamMember.classList.add("team-member");
 
             const img = document.createElement("img");
-            img.src = team.image_link || "default-image.jpg"; 
+            img.src = team.image_link || "default-image.jpg";
             img.alt = team.name;
 
             const teamText = document.createElement("div");
@@ -250,7 +324,24 @@ async function fetchTeam() {
             teamMember.appendChild(img);
             teamMember.appendChild(teamText);
 
-            categories[groupId].appendChild(teamMember);
+            container.appendChild(teamMember);
+        });
+
+        Object.entries(hasMembers).forEach(([groupId, hasData]) => {
+            if (!hasData) {
+                const container = categories[groupId];
+                if (container) {
+                    const prevSection = container.previousElementSibling;
+                    if (
+                        prevSection &&
+                        prevSection.tagName === "SECTION" &&
+                        prevSection.querySelector("h2")
+                    ) {
+                        prevSection.remove();
+                    }
+                    container.remove(); 
+                }
+            }
         });
 
     } catch (error) {
@@ -263,24 +354,14 @@ async function fetchTeam() {
 
 
 
-
-
-
-async function fetchGallery() {
+export async function fetchGallery() {
     try {
-        //const response = await fetch("http://127.0.0.1:5000/gallery");
-        const response = await fetch("https://vgnet.onrender.com/gallery");
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.error || "Failed to fetch gallery data");
-        }
+        const { data, error } = await supabase.from("gallery").select("*");
 
     const galleryContainer = document.querySelector('.gallery');
 
 
-        galleryContainer.innerHTML = ''; // Clear existing static content
+        galleryContainer.innerHTML = '';
 
         data.forEach((item) => {
             const img = document.createElement('img');

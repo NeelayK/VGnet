@@ -239,6 +239,25 @@ nav ul li {
     transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
+.next-btn, .prev-btn{
+    display: inline-block;
+    width: 2rem;
+    height: 2rem;
+    font-size: 1rem;
+    border-radius: 50%;
+    border-style: none;
+    background-color: black;
+    color: white;
+    border: 2px solid black;
+    transition: background-color 0.3s ease, color 0.3s ease;
+
+}
+
+.next-btn:hover, .prev-btn:hover {
+    background-color: white;
+    color: black;
+}
+
 .primary-button:hover {
     background-color: #333;
     transform: scale(1.05);
@@ -249,10 +268,19 @@ nav ul li {
 .info-section {
     display: flex;
     justify-content: center;
-    padding: 4rem 8%;
+    padding: 0rem 8%;
+    padding-bottom: 2rem;
     position: relative;
     background-color: var(--primary-bg);
 }
+
+.publications{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
 
 .info-container {
     display: flex;
@@ -279,13 +307,17 @@ flex-direction:column;
     min-width: 300px;
     min-height: 200px;
     padding: 2rem 4rem;
-    background: white;
+    background: rgba(255,255,255,0.8);
     border-radius: 10px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     text-align: center;
-width: 100%;
-    box-sizing: border-box;        /* Prevents overflow due to padding */
+    width: 100%;
+    box-sizing: border-box;
 
+}
+
+.publications .info-box{
+    width: 45%;
 }
 
 .info-section .info-box .info-header h3{
@@ -338,9 +370,9 @@ max-width:30%;
     color: var(--text-color);
 
     padding: 0.5em;
-    word-wrap: break-word;         /* Breaks long words */
-    white-space: normal;           /* Allows text to wrap */
-    overflow-wrap: break-word;     /* Ensures breaking even for long words */
+    word-wrap: break-word;
+    white-space: normal;
+    overflow-wrap: break-word;
     width: 100%;
 }
 
@@ -747,6 +779,11 @@ canvas {
         font-size: 1rem;
     }
 
+    
+    .publications .info-box{
+        width: 100%;
+}
+
     .contact-info, .research-areas {
         max-width: 100%;
         margin-right: 0;
@@ -805,10 +842,19 @@ canvas {
         font-size: large;
     }
 
+.info-header{
+    flex-direction: column;
+}
 
+.prototype-image{
+max-width:80%;
+align-self: center;
+}
+
+.info-body{
+    flex-direction: column;
+}
     .info-box {
-        max-height: 300px;
-        margin-bottom: 4rem;
         padding: 1rem;
     }
 
