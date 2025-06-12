@@ -1,6 +1,6 @@
 // htmlfetch.js
 import { canvasLoad } from './script.js';
-import { fetchCollab, fetchGallery, fetchProjects, fetchPublications, fetchTeam, setupPaginationButtons } from './sqlfetch.js';
+import { fetchCollab, fetchGallery, fetchProjects, fetchPublications, fetchSponsors, fetchTeam, renderInfoSection, setupPaginationButtons } from './sqlfetch.js';
 
 export function loadComponent(id, file) {
     fetch(file)
@@ -21,9 +21,14 @@ export function loadPage(page) {
             document.getElementById("content").innerHTML = data;
 
             if (document.getElementById("missionCanvas")) canvasLoad();
+            //if(document.getElementById("RecentPublished")) renderMostRecentPublication();
             if (document.getElementById("JP")){
                 fetchPublications();
                 setupPaginationButtons();
+            }
+            if(document.querySelector(".info-section")){
+                renderInfoSection();
+                fetchSponsors();
             }
             if (document.querySelector(".projects")) fetchProjects();
             if (document.querySelector(".collabsHead")) fetchCollab();
@@ -39,3 +44,5 @@ export function loadPage(page) {
 
 window.loadComponent = loadComponent;
 window.loadPage = loadPage;
+
+

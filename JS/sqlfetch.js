@@ -29,6 +29,28 @@ function getSectionMap() {
   };
 }
 
+function updatePageInfo(type) {
+  const totalPublications = publicationsData[type].length;
+  const totalPages = Math.ceil(totalPublications / pageSize);
+  const current = currentPage[type];
+  const start = current * pageSize + 1;
+  const end = Math.min((current + 1) * pageSize, totalPublications);
+  
+  const pageInfoElement = document.querySelector(`.page-info[data-type="${type}"]`);
+  if (pageInfoElement) {
+    pageInfoElement.textContent = `[${start}-${end}/${totalPublications}]`;
+  }
+
+  const prevButton = document.querySelector(`.prev-btn[data-type="${type}"]`);
+  const nextButton = document.querySelector(`.next-btn[data-type="${type}"]`);
+  
+  if (prevButton) {
+    prevButton.classList.toggle('disabled', current === 0);
+  }
+  if (nextButton) {
+    nextButton.classList.toggle('disabled', current >= totalPages - 1);
+  }
+}
 
 export function renderPage(type) {
   const sectionMap = getSectionMap();
@@ -41,10 +63,8 @@ export function renderPage(type) {
 
   container.innerHTML = '';
 
-  // Sort by date descending (newest first)
   const sortedData = publicationsData[type].sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  // Calculate start and end indices
   const start = currentPage[type] * pageSize;
   const end = start + pageSize;
   const pageData = sortedData.slice(start, end);
@@ -71,6 +91,8 @@ export function renderPage(type) {
 
     container.appendChild(infoBox);
   });
+
+  updatePageInfo(type);
 }
 
 export async function fetchPublications() {
@@ -89,14 +111,16 @@ export async function fetchPublications() {
     currentPage[2] = 0;
     currentPage[3] = 0;
 
-    [1, 2, 3].forEach(type => renderPage(type));
-
+    [1, 2, 3].forEach(type => {
+      renderPage(type);
+      updatePageInfo(type);
+    });
 
   } catch (error) {
     console.error("Error loading publications:", error);
   }
-
 }
+
 
 export function setupPaginationButtons() {
   const nextButtons = document.querySelectorAll('.next-btn');
@@ -105,7 +129,7 @@ export function setupPaginationButtons() {
   nextButtons.forEach(btn => {
     btn.addEventListener('click', () => {
       const type = Number(btn.dataset.type);
-      const maxPage = Math.floor(publicationsData[type].length / pageSize);
+      const maxPage = Math.ceil(publicationsData[type].length / pageSize) - 1; // Fixed this line
       if (currentPage[type] < maxPage) {
         currentPage[type]++;
         renderPage(type);
@@ -123,6 +147,82 @@ export function setupPaginationButtons() {
     });
   });
 }
+
+
+export async function renderInfoSection() {
+  const recentNewsContainer = document.getElementById("recentNews");
+  recentNewsContainer.innerHTML = "<p>Loading...</p>";
+
+  try {
+    const [pubRes, newsRes, projRes] = await Promise.all([
+      supabase.from("publication").select("*"),
+      supabase.from("news").select("*"),
+      supabase.from("projects").select("*").eq("completed", true),
+    ]);
+
+    if (pubRes.error || newsRes.error || projRes.error) {
+      throw new Error("Error fetching data from Supabase.");
+    }
+
+const latestPub = pubRes.data
+  .filter(pub => pub.type === 3)
+  .sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+
+
+    const latestNews = newsRes.data.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+
+    const latestCompletedProject = projRes.data.sort((a, b) => b.id - a.id)[0];
+
+    recentNewsContainer.innerHTML = "";
+
+    const createNewsTab = (heading, text) => {
+      const tab = document.createElement("div");
+      tab.className = "newsTab";
+
+      const h3 = document.createElement("h3");
+      h3.className = "lab-description";
+      h3.textContent = heading;
+
+      const h4 = document.createElement("h4");
+      h4.textContent = text;
+
+      const hr = document.createElement("hr");
+
+      tab.appendChild(h3);
+      tab.appendChild(h4);
+      tab.appendChild(hr);
+
+      return tab;
+    };
+
+    if (latestPub) {
+      recentNewsContainer.appendChild(createNewsTab("Latest Patent", latestPub.title));
+    }
+
+    if (latestNews) {
+      recentNewsContainer.appendChild(createNewsTab("Project News", latestNews.title));
+    }
+
+    if (latestCompletedProject) {
+      recentNewsContainer.appendChild(createNewsTab("Just Completed Project", latestCompletedProject.title));
+    }
+
+  } catch (err) {
+    console.error("Failed to render info section:", err);
+    recentNewsContainer.innerHTML = "<p>Error loading content.</p>";
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -196,8 +296,8 @@ export async function fetchProjects() {
             }
         });
 
-        canvasLoad(100, 200, 1.1, 'missionCanvasOngoing','155,155,255');
-        canvasLoad(100, 100, 1.1, 'missionCanvasCompleted','255,155,155');
+        canvasLoad(100, 300, 1.8, 'missionCanvasOngoing','255,155,155');
+        canvasLoad(100, 100, 1.1, 'missionCanvasCompleted','155,155,255');
 
     } catch (error) {
         console.error("Error fetching projects:", error);
@@ -379,5 +479,28 @@ export async function fetchGallery() {
 
     } catch (error) {
         console.error('Error loading gallery:', error);
+    }
+}
+
+
+export async function fetchSponsors() {
+    try {
+        const { data, error } = await supabase.from("fundings").select("*");
+
+    const container = document.getElementById("sponsors");
+
+
+        container.innerHTML = '';
+
+        data.forEach((item) => {
+            const img = document.createElement('img');
+            img.src = item.sponsors;
+            img.style.marginBottom = "1em";
+            img.classList.add("sponsorImg");
+            container.appendChild(img);
+        });
+
+    } catch (error) {
+        console.error('Error loading sponsors:', error);
     }
 }

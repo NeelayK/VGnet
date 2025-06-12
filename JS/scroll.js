@@ -17,3 +17,20 @@ function handleScroll() {
 window.addEventListener('scroll', handleScroll);
 document.addEventListener('DOMContentLoaded', handleScroll);
 
+
+
+
+let darkModeInitialized = false;
+
+function toggleDarkMode() {
+    const toggleBtn = document.getElementById("toggle-btn");
+    if (toggleBtn && !darkModeInitialized) {
+        darkModeInitialized = true;
+        toggleBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            document.body.classList.toggle("dark-mode");
+            const isDark = document.body.classList.contains("dark-mode");
+            localStorage.setItem("theme", isDark ? "dark" : "light");
+        });
+    }
+}
