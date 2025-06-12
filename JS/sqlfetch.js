@@ -484,23 +484,40 @@ export async function fetchGallery() {
 
 
 export async function fetchSponsors() {
-    try {
-        const { data, error } = await supabase.from("fundings").select("*");
+  try {
+    const { data, error } = await supabase.from("fundings").select("*");
+    if (error) throw error;
 
     const container = document.getElementById("sponsors");
+    container.innerHTML = '';
+
+    const industrial = data.filter(item => item.industrial);
+    const government = data.filter(item => !item.industrial);
+
+    const createSection = (title, sponsors) => {
+      const section = document.createElement('div');
+
+      const heading = document.createElement('h3');
+      heading.textContent = title;
 
 
-        container.innerHTML = '';
+      sponsors.forEach((item) => {
+        const img = document.createElement('img');
+        img.src = item.sponsors;
+        img.style.marginBottom = "1em";
+        img.classList.add("sponsorImg");
+        section.appendChild(img);
+        section.appendChild(heading);
+      });
 
-        data.forEach((item) => {
-            const img = document.createElement('img');
-            img.src = item.sponsors;
-            img.style.marginBottom = "1em";
-            img.classList.add("sponsorImg");
-            container.appendChild(img);
-        });
+      return section;
+    };
 
-    } catch (error) {
-        console.error('Error loading sponsors:', error);
-    }
+    container.appendChild(createSection("Industrial Collaborators", industrial));
+    container.appendChild(document.createElement('br'));
+    container.appendChild(createSection("Government Collaborators", government));
+
+  } catch (error) {
+    console.error('Error loading sponsors:', error);
+  }
 }
