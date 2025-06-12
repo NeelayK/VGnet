@@ -498,24 +498,28 @@ export async function fetchSponsors() {
       const section = document.createElement('div');
 
       const heading = document.createElement('h3');
+      heading.style.fontWeight="1000";
       heading.textContent = title;
 
+        section.appendChild(heading);
 
       sponsors.forEach((item) => {
         const img = document.createElement('img');
         img.src = item.sponsors;
         img.style.marginBottom = "1em";
         img.classList.add("sponsorImg");
+        
         section.appendChild(img);
-        section.appendChild(heading);
       });
 
       return section;
     };
-
-    container.appendChild(createSection("Industrial Collaborators", industrial));
     container.appendChild(document.createElement('br'));
-    container.appendChild(createSection("Government Collaborators", government));
+        container.appendChild(document.createElement('br'));
+    container.appendChild(createSection("Government Funding Sources", government));
+    container.appendChild(document.createElement('br'));
+    
+    container.appendChild(createSection("Industrial Collaborators", industrial));
 
   } catch (error) {
     console.error('Error loading sponsors:', error);
